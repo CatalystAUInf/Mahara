@@ -1142,7 +1142,7 @@ iceTier', SERVICE_OBJECTIVE = '$serviceObjective' )"
         psql -h $postgresIP -U $pgadminlogin -c "CREATE USER ${maharadbuser} WITH PASSWORD '${maharadbpass}';" postgres 2>>/tmp/pg_error.log
         psql -h $postgresIP -U $pgadminlogin -c "GRANT ALL ON DATABASE ${maharadbname} TO ${maharadbuser};" postgres 2>>/tmp/pg_error.log
         rm -f /root/.pgpass
-
+     fi
 
 
     # Master config for syslog
