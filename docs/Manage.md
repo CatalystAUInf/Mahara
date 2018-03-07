@@ -1,7 +1,7 @@
-# Managing a Scalable Moodle Cluster in Azure
+# Managing a Scalable Mahara Cluster in Azure
 
 This document provides an overview of how to perform various
-management tasks on a scalable Moodle cluster on Azure.
+management tasks on a scalable Mahara cluster on Azure.
 
 ## Prerequisites
 
@@ -9,30 +9,30 @@ In order to configure our deployment and tools we'll set up some
 [environment variables](./Environment-Variables.md) to ensure consistency.
 
 In order to manage a cluster it is clearly necessary to first [deploy
-a scalable Moodle cluster on Azure](./Deploy.md).
+a scalable Mahara cluster on Azure](./Deploy.md).
 
 For convenience and readability this document also assumes that essential [deployment details for your cluster have been assigned to environment variables](./Get-Install-Data.md).
 
-## Updating Moodle code/settings
+## Updating Mahara code/settings
 
-Your controller Virtual Machine has Moodle code and data stored in
-`/moodle`. The site code is stored in `/moodle/html/moodle/`. This
+Your controller Virtual Machine has Mahara code and data stored in
+`/mahara`. The site code is stored in `/mahara/html/mahara/`. This
 data is replicated across dual gluster nodes to provide high
 availability. This directory is also mounted to your autoscaled
 frontends so all changes to files on the controller VM are immediately
 available to all frontend machines.
 
 Depending on how large your Gluster disks are sized, it may be helpful
-to keep multiple older versions (/moodle/html1, /moodle/html2, etc) to
+to keep multiple older versions (/mahara/html1, /mahara/html2, etc) to
 roll back if needed.
 
 To connect to your Controller VM use SSH with a username of
 'azureuser' and the SSH provided in the `sshPublicKey` input
 parameter. For example, to retrieve a listing of files and directories
-in the `/moodle` directory use:
+in the `/mahara` directory use:
 
 ```
-ssh -o StrictHostKeyChecking=no azureadmin@$MOODLE_CONTROLLER_INSTANCE_IP ls -l /moodle
+ssh -o StrictHostKeyChecking=no azureadmin@$MAHARA_CONTROLLER_INSTANCE_IP ls -l /mahara
 ```
 
 Results:
@@ -43,7 +43,7 @@ total 12
 drwxr-xr-x  2 www-data www-data 4096 Jan 17 00:59 certs
 -rw-r--r--  1 root     root        0 Jan 17 02:22 db-backup.sql
 drwxr-xr-x  3 www-data www-data 4096 Jan 17 00:54 html
-drwxrwx--- 10 www-data www-data 4096 Jan 17 06:55 moodledata
+drwxrwx--- 10 www-data www-data 4096 Jan 17 06:55 maharadata
 ```
 
 **IMPORTANT NOTE**
@@ -61,11 +61,11 @@ Q&A](https://superuser.com/questions/421074/ssh-the-authenticity-of-host-host-ca
 ## Getting an SQL dump
 
 By default a daily sql dump of your database is taken at 02:22 and
-saved to `/moodle/db-backup.sql`(.gz). This file can be retrieved
+saved to `/mahara/db-backup.sql`(.gz). This file can be retrieved
 using SCP or similar. For example:
 
 ``` bash
-scp azureadmin@$MOODLE_CONTROLLER_INSTANCE_IP:/moodle/db-backup.sql /tmp/moodle-db-backup.sql
+scp azureadmin@$MAHARA_CONTROLLER_INSTANCE_IP:/mahara/db-backup.sql /tmp/mahara-db-backup.sql
 ```
 
 To obtain a more recent SQL dump you run the commands appropriate for
@@ -79,7 +79,7 @@ snapshot of the database via SSH. For example, use the following
 command:
 
 ``` bash
-ssh azureadmin@$MOODLE_CONTROLLER_INSTANCE_IP 'pg_dump -Fc -h $MOODLE_DATABASE_DNS -U $MOODLE_DATABASE_ADMIN_USERNAME moodle > /moodle/db-snapshot.sql'
+ssh azureadmin@$MAHARA_CONTROLLER_INSTANCE_IP 'pg_dump -Fc -h $MAHARA_DATABASE_DNS -U $MAHARA_DATABASE_ADMIN_USERNAME mahara > /mahara/db-snapshot.sql'
 ```
 
 See the Postgres documentation for full details of the [`pg_dump`](https://www.postgresql.org/docs/9.5/static/backup-dump.html) command.
@@ -91,14 +91,14 @@ snapshot of the database via SSH. For example, use the following
 command:
 
 ``` bash
-ssh azureadmin@$MOODLE_CONTROLLER_INSTANCE_IP 'mysqldump -h $mysqlIP -u ${azuremoodledbuser} -p'${moodledbpass}' --databases ${moodledbname} | gzip > /moodle/db-backup.sql.gz'
+ssh azureadmin@$MAHARA_CONTROLLER_INSTANCE_IP 'mysqldump -h $mysqlIP -u ${azuremaharadbuser} -p'${maharadbpass}' --databases ${maharadbname} | gzip > /mahara/db-backup.sql.gz'
 ```
 
 ## Backup and Recovery
 
 If you have set the `azureBackupSwitch` in the input parameters to `1`
 then Azure will provide VM backups of your Gluster node. This is
-recommended as it contains both your Moodle code and your sitedata.
+recommended as it contains both your Mahara code and your sitedata.
 Restoring a backed up VM is outside the scope of this doc, but Azure's
 documentation on Recovery Services can be found here:
 https://docs.microsoft.com/en-us/azure/backup/backup-azure-vms-first-look-arm
@@ -113,19 +113,19 @@ Postgres databases. You can, however, create a new database instance,
 with a different size, and change your config to point to that. To get
 a different size database you'll need to:
 
-  1. [Place your Moodle site into maintenance
-     mode](https://docs.moodle.org/34/en/Maintenance_mode). You can do
+  1. [Place your Mahara site into maintenance
+     mode](https://docs.mahara.org/34/en/Maintenance_mode). You can do
      this either via the web interface or the command line on the
      controller VM.
   2. Perform an SQL dump of your database. See above for more details.
   3. Create a new Azure database of the size you want inside your
      existing resource group.
-  4. Using the details in your /moodle/html/moodle/config.php create a
+  4. Using the details in your /mahara/html/mahara/config.php create a
      new user and database matching the details in config.php. Make
      sure to grant all rights on the db to the user.
   5. On the controller instance, change the db setting in
-     /moodle/html/moodle/config.php to point to the new database.
-  6. Take Moodle site out of maintenance mode.
+     /mahara/html/mahara/config.php to point to the new database.
+  6. Take Mahara site out of maintenance mode.
   7. Once confirmed working, delete the previous database instance.
 
 How long this takes depends entirely on the size of your database and
@@ -139,8 +139,8 @@ basic testing, but a public website will want a real cert. After
 purchasing a trusted certificate, it can be copied to the following
 files to be ready immediately:
 
-  - /moodle/certs/nginx.key: Your certificate's private key
-  - /moodle/certs/nginx.crt: Your combined signed certificate and trust chain certificate(s).
+  - /mahara/certs/nginx.key: Your certificate's private key
+  - /mahara/certs/nginx.crt: Your combined signed certificate and trust chain certificate(s).
 
 ## Next Steps
 

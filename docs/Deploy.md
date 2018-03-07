@@ -1,37 +1,37 @@
-# Deploy Autoscaling Moodle Stack to Azure
+# Deploy Autoscaling Mahara Stack to Azure
 
 After following the steps in this this document you with awill have a
-new Moodle site with caching for speed and scaling frontends to handle
+new Mahara site with caching for speed and scaling frontends to handle
 load. The filesystem behind it is mirrored for high availability and
 optionally backed up through Azure. Filesystem permissions and options
-have also been tuned to make Moodle more secure than a default
+have also been tuned to make Mahara more secure than a default
 install.
 
 ## Prerequisites
 
-To make things consitent across different sessions managing Moodle we
+To make things consitent across different sessions managing Mahara we
 should [configure the environment](./Preparation.md).
 
 
 ## Create Resource Group
 
-When you create the Moodle cluster you will create many resources. On
+When you create the Mahara cluster you will create many resources. On
 Azure it is a best practice to collect such resources together in a
 Resource Group. The first thing we need to do, therefore, is create a
 resource group:
 
 ```
-az group create --name $MOODLE_RG_NAME --location $MOODLE_RG_LOCATION
+az group create --name $MAHARA_RG_NAME --location $MAHARA_RG_LOCATION
 ```
 
 Results:
 
 ```expected_similarity=0.4
 {
-  "id": "/subscriptions/325e7c34-99fb-4190-aa87-1df746c67705/resourceGroups/rgmoodlearm3",
+  "id": "/subscriptions/325e7c34-99fb-4190-aa87-1df746c67705/resourceGroups/rgmaharaarm3",
   "location": "westus2",
   "managedBy": null,
-  "name": "rgmoodlearm3",
+  "name": "rgmaharaarm3",
   "properties": {
     "provisioningState": "Succeeded"
   },
@@ -56,9 +56,9 @@ that **must** be provided. To automatically add your default SSH key
 (in Bash) use the following command:
 
 ``` bash
-ssh_pub_key=`cat $MOODLE_SSH_KEY_FILENAME.pub`
+ssh_pub_key=`cat $MAHARA_SSH_KEY_FILENAME.pub`
 echo $ssh_pub_key
-sed "s|GEN-SSH-PUB-KEY|$ssh_pub_key|g" $MOODLE_AZURE_WORKSPACE/arm_template/azuredeploy.parameters.json > $MOODLE_AZURE_WORKSPACE/$MOODLE_RG_NAME/azuredeploy.parameters.json
+sed "s|GEN-SSH-PUB-KEY|$ssh_pub_key|g" $MAHARA_AZURE_WORKSPACE/arm_template/azuredeploy.parameters.json > $MAHARA_AZURE_WORKSPACE/$MAHARA_RG_NAME/azuredeploy.parameters.json
 ```
 
 ## Deploy cluster
@@ -67,22 +67,22 @@ Now that we have a resource group and a configuration file we can
 create the cluster itself. This is done with a single command:
 
 ```
-az group deployment create --name $MOODLE_DEPLOYMENT_NAME --resource-group $MOODLE_RG_NAME --template-file $MOODLE_AZURE_WORKSPACE/arm_template/azuredeploy.json --parameters $MOODLE_AZURE_WORKSPACE/$MOODLE_RG_NAME/azuredeploy.parameters.json
+az group deployment create --name $MAHARA_DEPLOYMENT_NAME --resource-group $MAHARA_RG_NAME --template-file $MAHARA_AZURE_WORKSPACE/arm_template/azuredeploy.json --parameters $MAHARA_AZURE_WORKSPACE/$MAHARA_RG_NAME/azuredeploy.parameters.json
 ```
 
 ## Using the created stack
 
 In testing, stacks typically took between 1 and 2 hours to finish,
 depending on spec. Once complete you will receive a JSON output
-containing information needed to manage your Moodle install (see
+containing information needed to manage your Mahara install (see
 `outputs`). You can also retrieve this infromation from the portal or
 the CLI.
                       
-Once Moodle has been created, and (where necessary) you have
+Once Mahara has been created, and (where necessary) you have
 configured your custom `siteURL` DNS to point to the
 `loadBalancerDNS`, you should be able to load the `siteURL` in a
 browser and login with the username "admin" and the
-`moodleAdminPassword`. Note that the values for each of these
+`maharaAdminPassword`. Note that the values for each of these
 parameters are avialble in the portal or the `outputs` section of the
 JSON response from the previous deploy command. See [documentation on
 how to retrieve configuration data](./Get-Install-Data.md) along
@@ -95,7 +95,7 @@ cluster](./Manage.md).
 
 ## Sizing Considerations and Limitations
 
-Depending on what you're doing with Moodle you will want to configure
+Depending on what you're doing with Mahara you will want to configure
 your deployment appropriately.The defaults included produce a cluster
 that is inexpensive but probably too low spec to use beyond simple
 testing scenarios. This section includes an overview of how to size
@@ -122,7 +122,7 @@ database tier:
 This value also limits the maximum number of connections, as defined
 here: https://docs.microsoft.com/en-us/azure/mysql/concepts-limits
 
-As the Moodle database will handle cron processes as well as the
+As the Mahara database will handle cron processes as well as the
 website, any public facing website with more than 10 users will likely
 require upgrading to 100. Once the site reaches 30+ users it will
 require upgrading to Standard for more compute units. This depends
@@ -139,7 +139,7 @@ your storage. The current maximum iops with a 1TB disk is 3000.
 ### Controller instance sizing
 
 The controller handles both syslog and cron duties. Depending on how
-big your Moodle cron runs are this may not be sufficient. If cron jobs
+big your Mahara cron runs are this may not be sufficient. If cron jobs
 are very delayed and cron processes are building up on the controller
 then an upgrade in tier is needed.
 
@@ -164,4 +164,4 @@ during many small jobs.
 ## Next Steps
 
   1. [Retrieve configuration details using CLI](./Get-Install-Data.md)
-  1. [Manage the Moodle cluster](./Manage.md)
+  1. [Manage the Mahara cluster](./Manage.md)

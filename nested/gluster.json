@@ -2,9 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "moodleCommon": {
+        "maharaCommon": {
             "metadata": {
-                "description": "Common Moodle values"
+                "description": "Common Mahara values"
             },
             "type": "object"
         }
@@ -14,7 +14,7 @@
             "type": "Microsoft.Compute/availabilitySets",
             "apiVersion": "2017-03-30",
             "location": "[resourceGroup().location]",
-            "name": "[parameters('moodleCommon').gfxAvailabilitySetName]",
+            "name": "[parameters('maharaCommon').gfxAvailabilitySetName]",
             "properties": {
                 "platformFaultDomainCount": 2,
                 "platformUpdateDomainCount": 5
@@ -30,11 +30,11 @@
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "copy": {
-                "count": "[parameters('moodleCommon').glusterVmCount]",
+                "count": "[parameters('maharaCommon').glusterVmCount]",
                 "name": "vmloop"
             },
             "dependsOn": [
-                "[concat('Microsoft.Compute/availabilitySets/',parameters('moodleCommon').gfxAvailabilitySetName)]"
+                "[concat('Microsoft.Compute/availabilitySets/',parameters('maharaCommon').gfxAvailabilitySetName)]"
             ],
             "name": "[concat('glustervm',copyindex())]",
             "properties": {
@@ -43,12 +43,12 @@
                     "counter": {
                         "value": "[copyindex()]"
                     },
-                    "moodleCommon": {
-                        "value": "[parameters('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[parameters('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(parameters('moodleCommon').baseTemplateUrl,'glustervm.json',parameters('moodleCommon').artifactsSasToken)]"
+                    "uri": "[concat(parameters('maharaCommon').baseTemplateUrl,'glustervm.json',parameters('maharaCommon').artifactsSasToken)]"
                 }
             }
         }

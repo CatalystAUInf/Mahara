@@ -7,7 +7,7 @@
             "metadata": {
                 "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
             },
-            "defaultValue": "https://raw.githubusercontent.com/CatalystAUInf/Moodle/master/"
+            "defaultValue": "https://raw.githubusercontent.com/CatalystAUInf/Mahara/master/"
         },
         "_artifactsLocationSasToken": {
             "type": "securestring",
@@ -47,14 +47,14 @@
         "installO365pluginsSwitch": {
             "defaultValue": false,
             "metadata": {
-                "description": "Switch to install Moodle Office 365 plugins"
+                "description": "Switch to install Mahara Office 365 plugins"
             },
             "type": "bool"
         },
         "installElasticSearchSwitch": {
             "defaultValue": false,
             "metadata": {
-                "description": "Switch to install Moodle ElasticSearch plugins & VMs"
+                "description": "Switch to install Mahara ElasticSearch plugins & VMs"
             },
             "type": "bool"
         },
@@ -183,18 +183,14 @@
             },
             "type": "int"
         },
-        "moodleVersion": {
+        "maharaVersion": {
             "allowedValues": [
-                "MOODLE_34_STABLE",
-                "MOODLE_33_STABLE",
-                "MOODLE_32_STABLE",
-                "MOODLE_31_STABLE",
-                "MOODLE_30_STABLE",
-                "MOODLE_29_STABLE"
+                "17.10_STABLE",
+                "17.04_STABLE"
             ],
-            "defaultValue": "MOODLE_34_STABLE",
+            "defaultValue": "17.10_STABLE",
             "metadata": {
-                "description": "The Moodle version you want to install."
+                "description": "The Mahara version you want to install."
             },
             "type": "string"
         },
@@ -208,7 +204,7 @@
         "siteURL": {
             "defaultValue": "www.example.org",
             "metadata": {
-                "description": "URL for Moodle site"
+                "description": "URL for Mahara site"
             },
             "type": "string"
         },
@@ -381,7 +377,7 @@
         "vNetAddressSpace": {
             "defaultValue": "172.31.0.0",
             "metadata": {
-                "description": "Address range for the Moodle virtual network - presumed /16 - further subneting during vnet creation"
+                "description": "Address range for the Mahara virtual network - presumed /16 - further subneting during vnet creation"
             },
             "type": "string"
         },
@@ -418,12 +414,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl, parameters('dbServerType'), '.json', parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl, parameters('dbServerType'), '.json', parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -435,12 +431,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'recoveryservices.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'recoveryservices.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -455,12 +451,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'redis.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'redis.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -471,12 +467,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'network.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'network.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -492,12 +488,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'elastic.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'elastic.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -513,12 +509,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'gluster.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'gluster.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -538,12 +534,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'controller.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'controller.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -560,12 +556,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'webvmss.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'webvmss.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         },
@@ -576,12 +572,12 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[variables('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[variables('maharaCommon')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(variables('moodleCommon').baseTemplateUrl,'storageAccount.json',parameters('_artifactsLocationSasToken'))]"
+                    "uri": "[concat(variables('maharaCommon').baseTemplateUrl,'storageAccount.json',parameters('_artifactsLocationSasToken'))]"
                 }
             }
         }
@@ -589,7 +585,7 @@
     "outputs": {
       "siteURL": {
         "type": "string",
-        "value": "[variables('moodleCommon').siteURL]"
+        "value": "[variables('maharaCommon').siteURL]"
       },
       "controllerInstanceIP": {
         "type": "string",
@@ -597,39 +593,39 @@
       },
       "databaseDNS": {
         "type": "string",
-        "value": "[variables('moodleCommon').dbDNS]"
+        "value": "[variables('maharaCommon').dbDNS]"
       },
       "databaseAdminUsername": {
         "type": "string",
-        "value": "[variables('moodleCommon').dbUsername]"
+        "value": "[variables('maharaCommon').dbUsername]"
       },
       "databaseAdminPassword": {
         "type": "string",
-        "value": "[variables('moodleCommon').dbLoginPassword]"
+        "value": "[variables('maharaCommon').dbLoginPassword]"
       },
       "firstFrontendVmIP": {
         "type": "string",
         "value": "[reference('scaleSetTemplate').outputs.webvm1IP.value]"
       },
-      "moodleAdminPassword": {
+      "maharaAdminPassword": {
         "type": "string",
-        "value": "[variables('moodleCommon').moodleAdminPass]"
+        "value": "[variables('maharaCommon').maharaAdminPass]"
       },
-      "moodleDbUsername": {
+      "maharaDbUsername": {
         "type": "string",
-        "value": "[variables('moodleCommon').moodleDbUserAzure]"
+        "value": "[variables('maharaCommon').maharaDbUserAzure]"
       },
-      "moodleDbPassword": {
+      "maharaDbPassword": {
         "type": "string",
-        "value": "[variables('moodleCommon').moodleDbPass]"
+        "value": "[variables('maharaCommon').maharaDbPass]"
       },
       "loadBalancerDNS": {
         "type": "string",
-        "value": "[variables('moodleCommon').lbDns]"
+        "value": "[variables('maharaCommon').lbDns]"
       }
     },
     "variables": {
-        "documentation01": "This main-template calls multiple sub-templates to create the moodle system",
+        "documentation01": "This main-template calls multiple sub-templates to create the mahara system",
         "documentation02": "    recoveryservices0   - dummy template (see next statement)",
         "documentation03": "    recoveryservices1   - creates a recovery vault that will be subsequently used by the VM Backup - a paramter swtich controls whethe is is called or bypassed",
         "documentation04": "    redis               - creates a redis cache",
@@ -640,7 +636,7 @@
         "documentation09": "    webvmss             - creates a vm scale set",
         "documentation10": "    controller          - creates a jumpbox and deploys code",
         "documentation11": "GlusterFS Sizing guidance",
-        "moodleCommon": {
+        "maharaCommon": {
             "baseTemplateUrl": "[concat(parameters('_artifactsLocation'), 'nested/')]",
             "scriptLocation": "[concat(parameters('_artifactsLocation'), 'scripts/')]",
             "artifactsSasToken": "[parameters('_artifactsLocationSasToken')]",
@@ -698,13 +694,13 @@
             "lbDns": "[concat('lb-',variables('resourceprefix'),'.',resourceGroup().location,'.cloudapp.azure.com')]",
             "lbName": "[concat('lb-',variables('resourceprefix'))]",
             "lbPipName": "[concat('lb-pubip-',variables('resourceprefix'))]",
-            "moodleAdminPass": "[concat(toUpper('xl'), substring(uniqueString(resourceGroup().id, deployment().name), 6, 7),',1*8')]",
-            "moodleDbName": "moodle",
-            "moodleDbPass": "[concat('9#36^', substring(uniqueString(resourceGroup().id, deployment().name), 5, 8), toUpper('ercq'))]",
-            "moodleDbUser": "moodle",
-            "moodleDbUserAzure": "[concat('moodle', '@', parameters('dbServerType'), '-', variables('resourceprefix'))]",
-            "moodleInstallScriptFilename": "install_moodle.sh",
-            "moodleVersion": "[parameters('moodleVersion')]",
+            "maharaAdminPass": "[concat(toUpper('xl'), substring(uniqueString(resourceGroup().id, deployment().name), 6, 7),',1*8')]",
+            "maharaDbName": "mahara",
+            "maharaDbPass": "[concat('9#36^', substring(uniqueString(resourceGroup().id, deployment().name), 5, 8), toUpper('ercq'))]",
+            "maharaDbUser": "mahara",
+            "maharaDbUserAzure": "[concat('mahara', '@', parameters('dbServerType'), '-', variables('resourceprefix'))]",
+            "maharaInstallScriptFilename": "install_mahara.sh",
+            "maharaVersion": "[parameters('maharaVersion')]",
             "mysqlVersion": "[parameters('mysqlVersion')]",
             "osType": {
                 "offer": "UbuntuServer",

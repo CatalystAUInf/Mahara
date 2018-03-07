@@ -22,22 +22,20 @@
 
 #parameters 
 {
-    moodleVersion=${1}
+    maharaVersion=${1}
     glusterNode=${2}
     glusterVolume=${3}
     siteFQDN=${4}
-    dbIP=${5}
-    moodledbname=${6}
-    moodledbuser=${7}
-    moodledbpass=${8}
+    mysqlIP=${5}
+    maharadbname=${6}
+    maharadbuser=${7}
+    maharadbpass=${8}
     adminpass=${9}
-    dbadminlogin=${10}
-    dbadminpass=${11}
+    mysqladminlogin=${10}
+    mysqladminpass=${11}
     wabsacctname=${12}
     wabsacctkey=${13}
-    azuremoodledbuser=${14}
-    redisDns=${15}
-    redisAuth=${16}
+    azuremaharadbuser=${14}
     elasticVm1IP=${17}
     installO365pluginsSwitch=${18}
     installElasticSearchSwitch=${19}
@@ -47,23 +45,20 @@
     serviceTier=${23}
     serviceSize=${24}
 
-
-    echo $moodleVersion        >> /tmp/vars.txt
+    echo $maharaVersion        >> /tmp/vars.txt
     echo $glusterNode          >> /tmp/vars.txt
     echo $glusterVolume        >> /tmp/vars.txt
     echo $siteFQDN             >> /tmp/vars.txt
-    echo $dbIP                 >> /tmp/vars.txt
-    echo $moodledbname         >> /tmp/vars.txt
-    echo $moodledbuser         >> /tmp/vars.txt
-    echo $moodledbpass         >> /tmp/vars.txt
-    echo $adminpass            >> /tmp/vars.txt
-    echo $dbadminlogin         >> /tmp/vars.txt
-    echo $dbadminpass          >> /tmp/vars.txt
+    echo $mysqlIP              >> /tmp/vars.txt
+    echo $maharadbname         >> /tmp/vars.txt
+    echo $maharadbuser         >> /tmp/vars.txt
+    echo $maharadbpass         >> /tmp/vars.txt
+    echo    $adminpass         >> /tmp/vars.txt
+    echo $mysqladminlogin      >> /tmp/vars.txt
+    echo $mysqladminpass       >> /tmp/vars.txt
     echo $wabsacctname         >> /tmp/vars.txt
     echo $wabsacctkey          >> /tmp/vars.txt
-    echo $azuremoodledbuser    >> /tmp/vars.txt
-    echo $redisDns             >> /tmp/vars.txt
-    echo $redisAuth            >> /tmp/vars.txt
+    echo $azuremaharadbuser    >> /tmp/vars.txt
     echo $elasticVm1IP         >> /tmp/vars.txt
     echo $installO365pluginsSwitch    >> /tmp/vars.txt
     echo $installElasticSearchSwitch  >> /tmp/vars.txt
@@ -96,7 +91,7 @@
 
     # make sure system does automatic updates and fail2ban
     sudo apt-get -y update
-    sudo apt-get -y install unattended-upgrades fail2ban
+    sudo apt-get -y install unattended-upgrades fail2ban pwgen
 
     # configure fail2ban
     cat <<EOF > /etc/fail2ban/jail.conf
@@ -585,8 +580,8 @@ findtime = 86400   ; 1 day
 maxretry = 5
 EOF
 
-    # create gluster, nfs or Azure Files mount point
-    mkdir -p /moodle
+    # create gluster mount point
+    mkdir -p /mahara
 
     export DEBIAN_FRONTEND=noninteractive
 
@@ -595,8 +590,8 @@ EOF
         sudo add-apt-repository ppa:gluster/glusterfs-3.8 -y                 >> /tmp/apt1.log
     elif [ $fileServerType = "nfs" ]; then
         # configure NFS server and export
-        create_filesystem_with_raid /moodle /dev/md1 /dev/md1p1
-        configure_nfs_server_and_export /moodle
+        create_filesystem_with_raid /mahara /dev/md1 /dev/md1p1
+        configure_nfs_server_and_export /mahara
     fi
 
     sudo apt-get -y update                                                   >> /tmp/apt2.log
@@ -648,8 +643,8 @@ EOF
 
     if [ $fileServerType = "gluster" ]; then
         # mount gluster files system
-        echo -e '\n\rInstalling GlusterFS on '$glusterNode':/'$glusterVolume '/moodle\n\r' 
-        sudo mount -t glusterfs $glusterNode:/$glusterVolume /moodle
+        echo -e '\n\rInstalling GlusterFS on '$glusterNode':/'$glusterVolume '/mahara\n\r' 
+        sudo mount -t glusterfs $glusterNode:/$glusterVolume /mahara
     fi
     
     # install pre-requisites
@@ -659,73 +654,51 @@ EOF
     sudo apt-get -y  --force-yes install nginx php-fpm varnish >> /tmp/apt5a.log
     sudo apt-get -y  --force-yes install php php-cli php-curl php-zip >> /tmp/apt5b.log
 
-    # Moodle requirements
+    # Mahara requirements
     sudo apt-get -y update > /dev/null
     sudo apt-get install -y --force-yes graphviz aspell php-common php-soap php-json php-redis > /tmp/apt6.log
-    sudo apt-get install -y --force-yes php-bcmath php-gd php-xmlrpc php-intl php-xml php-bz2 php-pear php-mbstring php-dev mcrypt >> /tmp/apt6.log
+    sudo apt-get install -y --force-yes php-mbstring php-bcmath php-gd php-mysql php-xmlrpc php-intl php-xml php-bz2 >> /tmp/apt6.log
+    sudo apt-get install -y --force-yes npm nodejs-legacy
     if [ $dbServerType = "mysql" ]; then
         sudo apt-get install -y --force-yes php-mysql
     elif [ $dbServerType = "mssql" ]; then
-        install_php_sql_driver 
+        install_php_sql_driver
     else
         sudo apt-get install -y --force-yes php-pgsql
     fi
 
-    # Set up initial moodle dirs
-    mkdir -p /moodle/html
-    mkdir -p /moodle/certs
-    mkdir -p /moodle/moodledata
-    chown -R www-data.www-data /moodle
 
-    # install Moodle 
+
+
+    # Set up initial mahara dirs
+    mkdir -p /mahara/html/mahara
+    mkdir -p /mahara/certs
+    mkdir -p /mahara/maharadata
+    chown -R www-data.www-data /mahara
+
+    # install Mahara 
     echo '#!/bin/bash
     cd /tmp
 
-    # downloading moodle 
-    /usr/bin/curl -k --max-redirs 10 https://github.com/moodle/moodle/archive/'$moodleVersion'.zip -L -o moodle.zip
-    /usr/bin/unzip -q moodle.zip
-    /bin/mv -v moodle-'$moodleVersion' /moodle/html/moodle
+    # downloading mahara 
+    /usr/bin/curl -k --max-redirs 10 https://github.com/MaharaProject/mahara/archive/'$maharaVersion'.zip -L -o mahara.zip
+    /usr/bin/unzip -q mahara.zip
+    # setup theme files
+    cd mahara-'$maharaVersion'
+    /bin/mv -v * /mahara/html/mahara
+    ' > /tmp/setup-mahara.sh
 
-    if [ "'$installO365pluginsSwitch'" = "True" ]; then
-        # install Office 365 plugins
-        curl -k --max-redirs 10 https://github.com/Microsoft/o365-moodle/archive/'$moodleVersion'.zip -L -o o365.zip
-        unzip -q o365.zip
-        cp -r o365-moodle-'$moodleVersion'/* /moodle/html/moodle
-        rm -rf o365-moodle-'$moodleVersion'
-    fi
+    chmod 755 /tmp/setup-mahara.sh
+    sudo -u www-data /tmp/setup-mahara.sh  >> /tmp/setupmahara.log
+    cd  /mahara/html/mahara
+    npm install -g gulp
+    make css
 
-    if [ "'$installElasticSearchSwitch'" = "True" ]; then
-        # Install ElasticSearch plugin
-        /usr/bin/curl -k --max-redirs 10 https://github.com/catalyst/moodle-search_elastic/archive/master.zip -L -o plugin-elastic.zip
-        /usr/bin/unzip -q plugin-elastic.zip
-        /bin/mkdir -p /moodle/html/moodle/search/engine/elastic
-        /bin/cp -r moodle-search_elastic-master/* /moodle/html/moodle/search/engine/elastic
-        /bin/rm -rf moodle-search_elastic-master
 
-        # Install ElasticSearch plugin dependency
-        /usr/bin/curl -k --max-redirs 10 https://github.com/catalyst/moodle-local_aws/archive/master.zip -L -o local-aws.zip
-        /usr/bin/unzip -q local-aws.zip
-        /bin/mkdir -p /moodle/html/moodle/local/aws
-        /bin/cp -r moodle-local_aws-master/* /moodle/html/moodle/local/aws
-    fi
+    # create cron entry
+    # It is scheduled for once per day. It can be changed as needed.
+    echo '* * * * * www-data /usr/bin/php /mahara/html/mahara/htdocs/lib/cron.php 2>&1 | /usr/bin/logger -plocal2.notice -t mahara' > /etc/cron.d/mahara-cron
 
-    # Install the ObjectFS plugin
-    /usr/bin/curl -k --max-redirs 10 https://github.com/catalyst/moodle-tool_objectfs/archive/master.zip -L -o plugin-objectfs.zip
-    /usr/bin/unzip -q plugin-objectfs.zip
-    /bin/mkdir -p /moodle/html/moodle/admin/tool/objectfs
-    /bin/cp -r moodle-tool_objectfs-master/* /moodle/html/moodle/admin/tool/objectfs
-    /bin/rm -rf moodle-tool_objectfs-master
-
-    # Install the ObjectFS Azure library
-    /usr/bin/curl -k --max-redirs 10 https://github.com/catalyst/moodle-local_azure_storage/archive/master.zip -L -o plugin-azurelibrary.zip
-    /usr/bin/unzip -q plugin-azurelibrary.zip
-    /bin/mkdir -p /moodle/html/moodle/local/azure_storage
-    /bin/cp -r moodle-local_azure_storage-master/* /moodle/html/moodle/local/azure_storage
-    /bin/rm -rf moodle-local_azure_storage-master
-    ' > /tmp/setup-moodle.sh 
-
-    chmod 755 /tmp/setup-moodle.sh
-    sudo -u www-data /tmp/setup-moodle.sh >> /tmp/setupmoodle.log
 
     # Build nginx config
     cat <<EOF > /etc/nginx/nginx.conf
@@ -776,7 +749,7 @@ http {
     https on;                                                                                                                         
   }   
 
-  log_format moodle_combined '\$remote_addr - \$upstream_http_x_moodleuser [\$time_local] '
+  log_format mahara_combined '\$remote_addr - \$upstream_http_x_maharauser [\$time_local] '
                              '"\$request" \$status \$body_bytes_sent '
                              '"\$http_referer" "\$http_user_agent"';
 
@@ -790,12 +763,12 @@ EOF
 server {
         listen 81 default;
         server_name ${siteFQDN};
-        root /moodle/html/moodle;
+        root /mahara/html/mahara/htdocs;
 	index index.php index.html index.htm;
 
         # Log to syslog
-        error_log syslog:server=localhost,facility=local1,severity=error,tag=moodle;
-        access_log syslog:server=localhost,facility=local1,severity=notice,tag=moodle moodle_combined;
+        error_log syslog:server=localhost,facility=local1,severity=error,tag=mahara;
+        access_log syslog:server=localhost,facility=local1,severity=notice,tag=mahara mahara_combined;
 
         # Log XFF IP instead of varnish
         set_real_ip_from    10.0.0.0/8;
@@ -840,16 +813,16 @@ server {
 
 server {
         listen 443 ssl;
-        root /moodle/html/moodle;
+        root /mahara/html/mahara/htdocs;
 	index index.php index.html index.htm;
 
         ssl on;
-        ssl_certificate /moodle/certs/nginx.crt;
-        ssl_certificate_key /moodle/certs/nginx.key;
+        ssl_certificate /mahara/certs/nginx.crt;
+        ssl_certificate_key /mahara/certs/nginx.key;
 
         # Log to syslog
-        error_log syslog:server=localhost,facility=local1,severity=error,tag=moodle;
-        access_log syslog:server=localhost,facility=local1,severity=notice,tag=moodle moodle_combined;
+        error_log syslog:server=localhost,facility=local1,severity=error,tag=mahara;
+        access_log syslog:server=localhost,facility=local1,severity=notice,tag=mahara mahara_combined;
 
         # Log XFF IP instead of varnish
         set_real_ip_from    10.0.0.0/8;
@@ -872,7 +845,7 @@ server {
 EOF
 
     echo -e "Generating SSL self-signed certificate"
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /moodle/certs/nginx.key -out /moodle/certs/nginx.crt -subj "/C=BR/ST=SP/L=SaoPaulo/O=IT/CN=$siteFQDN"
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /mahara/certs/nginx.key -out /mahara/certs/nginx.crt -subj "/C=BR/ST=SP/L=SaoPaulo/O=IT/CN=$siteFQDN"
 
    # php config 
    PhpIni=/etc/php/7.0/fpm/php.ini
@@ -905,18 +878,18 @@ pm.min_spare_servers = 22
 pm.max_spare_servers = 30 
 EOF
 
-   # Remove the default site. Moodle is the only site we want
+   # Remove the default site. Mahara is the only site we want
    rm -f /etc/nginx/sites-enabled/default
 
    # restart Nginx
     sudo service nginx restart 
 
    # Configure varnish startup for 16.04
-   VARNISHSTART="ExecStart=\/usr\/sbin\/varnishd -j unix,user=vcache -F -a :80 -T localhost:6082 -f \/etc\/varnish\/moodle.vcl -S \/etc\/varnish\/secret -s malloc,1024m -p thread_pool_min=200 -p thread_pool_max=4000 -p thread_pool_add_delay=2 -p timeout_linger=100 -p timeout_idle=30 -p send_timeout=1800 -p thread_pools=4 -p http_max_hdr=512 -p workspace_backend=512k"
+   VARNISHSTART="ExecStart=\/usr\/sbin\/varnishd -j unix,user=vcache -F -a :80 -T localhost:6082 -f \/etc\/varnish\/mahara.vcl -S \/etc\/varnish\/secret -s malloc,1024m -p thread_pool_min=200 -p thread_pool_max=4000 -p thread_pool_add_delay=2 -p timeout_linger=100 -p timeout_idle=30 -p send_timeout=1800 -p thread_pools=4 -p http_max_hdr=512 -p workspace_backend=512k"
    sed -i "s/^ExecStart.*/${VARNISHSTART}/" /lib/systemd/system/varnish.service
 
-   # Configure varnish VCL for moodle
-   cat <<EOF >> /etc/varnish/moodle.vcl
+   # Configure varnish VCL for mahara
+   cat <<EOF >> /etc/varnish/mahara.vcl
 vcl 4.0;
 
 import std;
@@ -972,26 +945,16 @@ sub vcl_recv {
       return (pass);
     }
 
-    ### Rules for Moodle and Totara sites ###
-    # Moodle doesn't require Cookie to serve following assets. Remove Cookie header from request, so it will be looked up.
-    if ( req.url ~ "^/altlogin/.+/.+\.(png|jpg|jpeg|gif|css|js|webp)$" ||
-         req.url ~ "^/pix/.+\.(png|jpg|jpeg|gif)$" ||
-         req.url ~ "^/theme/font.php" ||
-         req.url ~ "^/theme/image.php" ||
-         req.url ~ "^/theme/javascript.php" ||
-         req.url ~ "^/theme/jquery.php" ||
-         req.url ~ "^/theme/styles.php" ||
-         req.url ~ "^/theme/yui" ||
-         req.url ~ "^/lib/javascript.php/-1/" ||
-         req.url ~ "^/lib/requirejs.php/-1/"
-        )
-    {
-        set req.http.X-Long-TTL = "86400";
-        unset req.http.Cookie;
+    ### Rules for Mahara sites ###
+    if (req.url ~ "^/theme/" ||
+        req.url ~ "^/js/" ||
+        req.url ~ "^/lib/" ||
+        req.url ~ "^/libs/"
+      ) {
         return(hash);
     }
-
-    # Perform lookup for selected assets that we know are static but Moodle still needs a Cookie
+ 
+    # Perform lookup for selected assets that we know are static but Mahara still needs a Cookie
     if(  req.url ~ "^/theme/.+\.(png|jpg|jpeg|gif|css|js|webp)" ||
          req.url ~ "^/lib/.+\.(png|jpg|jpeg|gif|css|js|webp)" ||
          req.url ~ "^/pluginfile.php/[0-9]+/course/overviewfiles/.+\.(?i)(png|jpg)$"
@@ -1003,7 +966,7 @@ sub vcl_recv {
     }
 
     # Serve requests to SCORM checknet.txt from varnish. Have to remove get parameters. Response body always contains "1"
-    if ( req.url ~ "^/lib/yui/build/moodle-core-checknet/assets/checknet.txt" )
+    if ( req.url ~ "^/lib/yui/build/mahara-core-checknet/assets/checknet.txt" )
     {
         set req.url = regsub(req.url, "(.*)\?.*", "\1");
         unset req.http.Cookie; # Will go to hash anyway at the end of vcl_recv
@@ -1016,7 +979,7 @@ sub vcl_recv {
         return (pass);
     }
 
-    # Almost everything in Moodle correctly serves Cache-Control headers, if
+    # Almost everything in Mahara correctly serves Cache-Control headers, if
     # needed, which varnish will honor, but there are some which don't. Rather
     # than explicitly finding them all and listing them here we just fail safe
     # and don't cache unknown urls that get this far.
@@ -1163,27 +1126,24 @@ EOF
     systemctl daemon-reload
     service varnish restart
 
-    if [ $dbServerType = "mysql" ]; then
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "CREATE DATABASE ${moodledbname} CHARACTER SET utf8;"
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "GRANT ALL ON ${moodledbname}.* TO ${moodledbuser} IDENTIFIED BY '${moodledbpass}';"
-
-        echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"CREATE DATABASE ${moodledbname};\"" >> /tmp/debug
-        echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"GRANT ALL ON ${moodledbname}.* TO ${moodledbuser} IDENTIFIED BY '${moodledbpass}';\"" >> /tmp/debug
-    elif [ $dbServerType = "mssql" ]; then
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE DATABASE ${moodledbname} ( MAXSIZE = $serviceSize, EDITION = '$serviceTier', SERVICE_OBJECTIVE = '$serviceObjective' )"
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE LOGIN ${moodledbuser} with password = '${moodledbpass}'" 
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${moodledbname} -Q "CREATE USER ${moodledbuser} FROM LOGIN ${moodledbuser}"
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${moodledbname} -Q "exec sp_addrolemember 'db_owner','${moodledbuser}'" 
-        
-    else
-        # Create postgres db
+     if [ $dbServerType = "mysql" ]; then
+        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "CREATE DATABASE ${maharadbname} CHARACTER SET utf8;"
+        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "GRANT ALL ON ${maharadbname}.* TO ${maharadbuser} IDENTIFIED BY '${maharadbpass}';"
+     elif [ $dbServerType = "mssql" ]; then
+         /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE DATABASE ${maharadbname} ( MAXSIZE = $serviceSize, EDITION = '$serv
+iceTier', SERVICE_OBJECTIVE = '$serviceObjective' )"
+        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE LOGIN ${maharadbuser} with password = '${maharabpass}'"
+        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${maharadbname} -Q "CREATE USER ${maharabuser} FROM LOGIN ${maharadbuser}"
+        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${maharadbname} -Q "exec sp_addrolemember 'db_owner','${maharabuser}'"
+     else
         echo "${postgresIP}:5432:postgres:${pgadminlogin}:${pgadminpass}" > /root/.pgpass
         chmod 600 /root/.pgpass
-        psql -h $postgresIP -U $pgadminlogin -c "CREATE DATABASE ${moodledbname};" postgres
-        psql -h $postgresIP -U $pgadminlogin -c "CREATE USER ${moodledbuser} WITH PASSWORD '${moodledbpass}';" postgres
-        psql -h $postgresIP -U $pgadminlogin -c "GRANT ALL ON DATABASE ${moodledbname} TO ${moodledbuser};" postgres
+        psql -h $postgresIP -U $pgadminlogin -c "CREATE DATABASE ${maharadbname};" postgres 2>>/tmp/pg_error.log
+        psql -h $postgresIP -U $pgadminlogin -c "CREATE USER ${maharadbuser} WITH PASSWORD '${maharadbpass}';" postgres 2>>/tmp/pg_error.log
+        psql -h $postgresIP -U $pgadminlogin -c "GRANT ALL ON DATABASE ${maharadbname} TO ${maharadbuser};" postgres 2>>/tmp/pg_error.log
         rm -f /root/.pgpass
-    fi
+
+
 
     # Master config for syslog
     mkdir /var/log/sitelogs
@@ -1193,96 +1153,49 @@ EOF
 \$UDPServerRun 514
 EOF
     cat <<EOF >> /etc/rsyslog.d/40-sitelogs.conf
-local1.*   /var/log/sitelogs/moodle/access.log
-local1.err   /var/log/sitelogs/moodle/error.log
-local2.*   /var/log/sitelogs/moodle/cron.log
+local1.*   /var/log/sitelogs/mahara/access.log
+local1.err   /var/log/sitelogs/mahara/error.log
+local2.*   /var/log/sitelogs/mahara/cron.log
 EOF
     service rsyslog restart
 
-    # Fire off moodle setup
-    if [ $dbServerType = "mysql" ]; then
-        echo -e "cd /tmp; sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://"$siteFQDN" --dataroot=/moodle/moodledata --dbhost="$mysqlIP" --dbname="$moodledbname" --dbuser="$azuremoodledbuser" --dbpass="$moodledbpass" --dbtype=mysqli --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass="$adminpass" --adminemail=admin@"$siteFQDN" --non-interactive --agree-license --allow-unstable || true "
-        cd /tmp; sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mysqlIP   --dbname=$moodledbname   --dbuser=$azuremoodledbuser   --dbpass=$moodledbpass   --dbtype=mysqli --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$adminpass   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
+# Fire off mahara setup
+PWGEN=`which pwgen`
+SALT=`${PWGEN} 32 1`
+URLSECRET=`${PWGEN} 8 1`
 
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} ${moodledbname} -e "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'enabletasks', 1);" 
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} ${moodledbname} -e "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'filesystem', '\\\tool_objectfs\\\azure_file_system');"
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} ${moodledbname} -e "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_accountname', '${wabsacctname}');"
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} ${moodledbname} -e "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_container', 'objectfs');"
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} ${moodledbname} -e "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_sastoken', '${sas}');"
-    elif [ $dbServerType = "mssql" ]; then
-        cd /tmp; sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$mssqlIP   --dbname=$moodledbname   --dbuser=$azuremoodledbuser   --dbpass=$moodledbpass   --dbtype=sqlsrv --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$adminpass   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
+    cat <<EOF >> /mahara/html/mahara/htdocs/config.php
+<?php
+\$cfg = new stdClass();
+\$cfg->dbtype   = 'mysql';
+\$cfg->dbhost   = '$mysqlIP';
+\$cfg->dbport   = null;
+\$cfg->dbname   = '$maharadbname';
+\$cfg->dbuser   = '$azuremaharadbuser';
+\$cfg->dbpass   = '$maharadbpass';
+\$cfg->dataroot = '/mahara/maharadata';
+\$cfg->wwwroot  = 'https://$siteFQDN';
+\$cfg->passwordsaltmain = '$SALT';
+\$cfg->productionmode = true;
+\$cfg->plugin_search_elasticsearch_indexname = 'mahara';
+\$cfg->plugin_search_elasticsearch_host = '$elasticVm1IP';
+\$cfg->sslproxy = true;
+\$cfg->sendemail = true;
+\$cfg->urlsecret = '$URLSECRET';
+\$cfg->directorypermissions = 0750;
 
-       /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${moodledbname} -Q "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'enabletasks', 1)" 
-       /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${moodledbname} -Q "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'filesystem', '\\\tool_objectfs\\\azure_file_system')"
-       /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${moodledbname} -Q "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_accountname', '${wabsacctname}')"
-       /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${moodledbname} -Q "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_container', 'objectfs')"
-       /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d${moodledbname} -Q "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_sastoken', '${sas}')"
+EOF
+cd /tmp; sudo -u www-data /usr/bin/php /mahara/html/mahara/htdocs/admin/cli/install.php --adminpassword="$adminpass" --adminemail=admin@"$siteFQDN" --sitename='Mahara Portfolio' || true
 
-    else
-        echo -e "cd /tmp; sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://"$siteFQDN" --dataroot=/moodle/moodledata --dbhost="$postgresIP" --dbname="$moodledbname" --dbuser="$azuremoodledbuser" --dbpass="$moodledbpass" --dbtype=pgsql --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass="$adminpass" --adminemail=admin@"$siteFQDN" --non-interactive --agree-license --allow-unstable || true "
-        cd /tmp; sudo -u www-data /usr/bin/php /moodle/html/moodle/admin/cli/install.php --chmod=770 --lang=en_us --wwwroot=https://$siteFQDN   --dataroot=/moodle/moodledata --dbhost=$postgresIP   --dbname=$moodledbname   --dbuser=$azuremoodledbuser   --dbpass=$moodledbpass   --dbtype=pgsql --fullname='Moodle LMS' --shortname='Moodle' --adminuser=admin --adminpass=$adminpass   --adminemail=admin@$siteFQDN   --non-interactive --agree-license --allow-unstable || true
 
-        # Add the ObjectFS configuration to Moodle.
-        echo "${postgresIP}:5432:${moodledbname}:${azuremoodledbuser}:${moodledbpass}" > /root/.pgpass
-        chmod 600 /root/.pgpass
-        psql -h $postgresIP -U $azuremoodledbuser -c "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'enabletasks', 1);" $moodledbname
-        psql -h $postgresIP -U $azuremoodledbuser -c "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'filesystem', '\tool_objectfs\azure_file_system');" $moodledbname
-        psql -h $postgresIP -U $azuremoodledbuser -c "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_accountname', '$wabsacctname');" $moodledbname
-        psql -h $postgresIP -U $azuremoodledbuser -c "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_container', 'objectfs');" $moodledbname
-        psql -h $postgresIP -U $azuremoodledbuser -c "INSERT INTO mdl_config_plugins (plugin, name, value) VALUES ('tool_objectfs', 'azure_sastoken', '$sas');" $moodledbname
-    fi
+
 
     echo -e "\n\rDone! Installation completed!\n\r"
 
-    if [ "$redisAuth" != "None" ]; then
-        create_redis_configuration_in_moodledata_muc_config_php
-
-        # redis configuration in /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_lock_expire = 7200;" /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_acquire_lock_timeout = 120;" /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_prefix = 'moodle_prod'; // Optional, default is don't set one." /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_database = 0;  // Optional, default is db 0." /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_port = 6379;  // Optional." /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_host = '$redisDns';" /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_redis_auth = '$redisAuth';" /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->session_handler_class = '\\\core\\\session\\\redis';" /moodle/html/moodle/config.php
-    fi
-
-    # We proxy ssl, so moodle needs to know this
-    sed -i "23 a \$CFG->sslproxy  = 'true';" /moodle/html/moodle/config.php
-
-    if [ "$installElasticSearchSwitch" = "True" ]; then
-        # Set up elasticsearch plugin
-        sed -i "23 a \$CFG->forced_plugin_settings = ['search_elastic' => ['hostname' => 'http://$elasticVm1IP']];" /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->searchengine = 'elastic';" /moodle/html/moodle/config.php
-        sed -i "23 a \$CFG->enableglobalsearch = 'true';" /moodle/html/moodle/config.php
-    fi
-
-    # Set the ObjectFS alternate filesystem
-    sed -i "23 a \$CFG->alternative_file_system_class = '\\\tool_objectfs\\\azure_file_system';" /moodle/html/moodle/config.php
-
-   if [ "$dbServerType" = "postgres" ]; then
-     # Get a new version of Postgres to match Azure version
-     add-apt-repository "deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main"
-     wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-     apt-get update
-     apt-get install postgresql-client-9.6
-   fi
-
-   # create cron entry
-   # It is scheduled for once per minute. It can be changed as needed.
-   echo '* * * * * www-data /usr/bin/php /moodle/html/moodle/admin/cli/cron.php 2>&1 | /usr/bin/logger -p local2.notice -t moodle' > /etc/cron.d/moodle-cron
-
    # Set up cronned sql dump
-   if [ "$dbServerType" = "mysql" ]; then
-      cat <<EOF > /etc/cron.d/sql-backup
-22 02 * * * root /usr/bin/mysqldump -h $mysqlIP -u ${azuremoodledbuser} -p'${moodledbpass}' --databases ${moodledbname} | gzip > /moodle/db-backup.sql.gz
+   cat <<EOF > /etc/cron.d/sql-backup
+   22 02 * * * root /usr/bin/mysqldump -h $mysqlIP -u ${azuremaharadbuser} -p'${maharadbpass}' --databases ${maharadbname} | gzip > /mahara/db-backup.sql.gz
 EOF
-   else
-      cat <<EOF > /etc/cron.d/sql-backup
-22 02 * * * root /usr/bin/pg_dump -Fc -h $postgresIP -U ${azuremoodledbuser} ${moodledbname} > /moodle/db-backup.sql
-EOF
-   fi
 
    # Turning off services we don't need the jumpbox running
    service nginx stop
@@ -1292,27 +1205,27 @@ EOF
    service varnishlog stop
 
    if [ $fileServerType = "gluster" -o $fileServerType = "nfs" ]; then
-      # make sure Moodle can read its code directory but not write
-      sudo chown -R root.root /moodle/html/moodle
-      sudo find /moodle/html/moodle -type f -exec chmod 644 '{}' \;
-      sudo find /moodle/html/moodle -type d -exec chmod 755 '{}' \;
+      # make sure Mahara can read its code directory but not write
+      sudo chown -R root.root /mahara/html/mahara
+      sudo find /mahara/html/mahara -type f -exec chmod 644 '{}' \;
+      sudo find /mahara/html/mahara -type d -exec chmod 755 '{}' \;
    fi
 
    if [ $fileServerType = "azurefiles" ]; then
-      # Delayed copy of moodle installation to the Azure Files share
+      # Delayed copy of mahara installation to the Azure Files share
 
-      # First rename moodle directory to something else
-      mv /moodle /moodle_old_delete_me
-      # Then create the moodle share
-      echo -e '\n\rCreating an Azure Files share for moodle'
-      create_azure_files_moodle_share $wabsacctname $wabsacctkey /tmp/wabs.log
+      # First rename mahara directory to something else
+      mv /mahara /mahara_old_delete_me
+      # Then create the mahara share
+      echo -e '\n\rCreating an Azure Files share for mahara'
+      create_azure_files_mahara_share $wabsacctname $wabsacctkey /tmp/wabs.log
       # Set up and mount Azure Files share. Must be done after nginx is installed because of www-data user/group
-      echo -e '\n\rSetting up and mounting Azure Files share on //'$wabsacctname'.file.core.windows.net/moodle on /moodle\n\r'
-      setup_and_mount_azure_files_moodle_share $wabsacctname $wabsacctkey
+      echo -e '\n\rSetting up and mounting Azure Files share on //'$wabsacctname'.file.core.windows.net/mahara on /mahara\n\r'
+      setup_and_mount_azure_files_mahara_share $wabsacctname $wabsacctkey
       # Move the local installation over to the Azure Files
-      echo -e '\n\rMoving locally installed moodle over to Azure Files'
-      cp -a /moodle_old_delete_me/* /moodle || true # Ignore case sensitive directory copy failure
-      # rm -rf /moodle_old_delete_me || true # Keep the files just in case
+      echo -e '\n\rMoving locally installed mahara over to Azure Files'
+      cp -a /mahara_old_delete_me/* /mahara || true # Ignore case sensitive directory copy failure
+      # rm -rf /mahara_old_delete_me || true # Keep the files just in case
    fi
 
 }  > /tmp/install.log

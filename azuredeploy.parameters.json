@@ -13,7 +13,7 @@
                 "fileServerDiskCount":         { "value": 4 },
                 "fileServerDiskSize":          { "value": 127 },
                 "glusterVmSku":                { "value": "Standard_DS2_v2" },
-                "moodleVersion":               { "value": "MOODLE_34_STABLE" },
+                "maharaVersion":               { "value": "17.10_STABLE" },
                 "mysqlVersion":                { "value": "5.7" },
                 "postgresVersion":             { "value": "9.6" },
                 "siteURL":                     { "value": "www.example.org" },

@@ -8,9 +8,9 @@
             },
             "type": "int"
         },
-        "moodleCommon": {
+        "maharaCommon": {
             "metadata": {
-                "description": "Common Moodle values"
+                "description": "Common Mahara values"
             },
             "type": "object"
         }
@@ -51,7 +51,7 @@
                     "id": "[variables('asRef')]"
                 },
                 "hardwareProfile": {
-                    "vmSize": "[parameters('moodleCommon').glusterVmSku]"
+                    "vmSize": "[parameters('maharaCommon').glusterVmSku]"
                 },
                 "networkProfile": {
                     "networkInterfaces": [
@@ -61,22 +61,22 @@
                     ]
                 },
                 "osProfile": {
-                    "adminUsername": "[parameters('moodleCommon').sshUsername]",
+                    "adminUsername": "[parameters('maharaCommon').sshUsername]",
                     "computerName": "[variables('vmName')]",
                     "linuxConfiguration": {
                         "disablePasswordAuthentication": true,
                         "ssh": {
                             "publicKeys": [
                                 {
-                                    "path": "[concat('/home/', parameters('moodleCommon').sshUsername, '/.ssh/authorized_keys')]",
-                                    "keyData": "[parameters('moodleCommon').sshPublicKey]"
+                                    "path": "[concat('/home/', parameters('maharaCommon').sshUsername, '/.ssh/authorized_keys')]",
+                                    "keyData": "[parameters('maharaCommon').sshPublicKey]"
                                 }
                             ]
                         }
                     }
                 },
                 "storageProfile": {
-                    "imageReference": "[parameters('moodleCommon').osType]",
+                    "imageReference": "[parameters('maharaCommon').osType]",
                     "osDisk": {
                         "createOption": "FromImage",
                         "managedDisk": {
@@ -87,12 +87,12 @@
                     "copy": [
                         {
                             "name": "dataDisks",
-                            "count": "[parameters('moodleCommon').fileServerDiskCount]",
+                            "count": "[parameters('maharaCommon').fileServerDiskCount]",
                             "input": {
                                 "managedDisk": {
                                     "storageAccountType": "Premium_LRS"
                                 },
-                                "diskSizeGB": "[parameters('moodleCommon').fileServerDiskSize]",
+                                "diskSizeGB": "[parameters('maharaCommon').fileServerDiskSize]",
                                 "lun": "[copyIndex('dataDisks')]",
                                 "createOption": "Empty"
                             }
@@ -105,7 +105,7 @@
             }
         },
         {
-            "condition": "[parameters('moodleCommon').applyScriptsSwitch]",
+            "condition": "[parameters('maharaCommon').applyScriptsSwitch]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "dependsOn": [
@@ -115,8 +115,8 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[parameters('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[parameters('maharaCommon')]"
                     },
                     "vmName": {
                         "value": "[ variables('vmName')]"
@@ -126,12 +126,12 @@
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(parameters('moodleCommon').baseTemplateUrl,'glustervmconfig.json',parameters('moodleCommon').artifactsSasToken)]"
+                    "uri": "[concat(parameters('maharaCommon').baseTemplateUrl,'glustervmconfig.json',parameters('maharaCommon').artifactsSasToken)]"
                 }
             }
         },
         {
-            "condition": "[parameters('moodleCommon').azureBackupSwitch]",
+            "condition": "[parameters('maharaCommon').azureBackupSwitch]",
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2017-05-10",
             "dependsOn": [
@@ -141,21 +141,21 @@
             "properties": {
                 "mode": "Incremental",
                 "parameters": {
-                    "moodleCommon": {
-                        "value": "[parameters('moodleCommon')]"
+                    "maharaCommon": {
+                        "value": "[parameters('maharaCommon')]"
                     },
                     "vmName": {
                         "value": "[variables('vmName')]"
                     }
                 },
                 "templateLink": {
-                    "uri": "[concat(parameters('moodleCommon').baseTemplateUrl,'recoveryservicesEnlist.json',parameters('moodleCommon').artifactsSasToken)]"
+                    "uri": "[concat(parameters('maharaCommon').baseTemplateUrl,'recoveryservicesEnlist.json',parameters('maharaCommon').artifactsSasToken)]"
                 }
             }
         }
     ],
     "variables": {
-        "asRef": "[resourceId('Microsoft.Compute/availabilitySets', parameters('moodleCommon').gfxAvailabilitySetName)]",
+        "asRef": "[resourceId('Microsoft.Compute/availabilitySets', parameters('maharaCommon').gfxAvailabilitySetName)]",
         "documentation01": "This sub-template create the nodes of the gluster farm",
         "documentation02": "It expects certain values in the 'common' datastructure.",
         "documentation04": " gfxAvailabilitySetName  - name of availability set for the gluster farm",
@@ -172,7 +172,7 @@
         "documentation20": " fileServerDiskSize         - Size per disk for gluster",
         "nicName": "[concat(variables('vmName'),'-nic')]",
         "nicRef": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]",
-        "subnetSanRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('moodleCommon').vnetName, parameters('moodleCommon').subnetSan)]",
-        "vmName": "[concat(parameters('moodleCommon').gfsNameRoot,parameters('counter'))]"
+        "subnetSanRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('maharaCommon').vnetName, parameters('maharaCommon').subnetSan)]",
+        "vmName": "[concat(parameters('maharaCommon').gfsNameRoot,parameters('counter'))]"
     }
 }

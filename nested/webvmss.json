@@ -2,9 +2,9 @@
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "moodleCommon": {
+        "maharaCommon": {
             "metadata": {
-                "description": "Common Moodle values"
+                "description": "Common Mahara values"
             },
             "type": "object"
         }
@@ -14,7 +14,7 @@
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
-            "name": "[parameters('moodleCommon').vmssdStorageAccounttName]",
+            "name": "[parameters('maharaCommon').vmssdStorageAccounttName]",
             "kind": "Storage",
             "sku": {
                 "name": "Standard_LRS"
@@ -24,10 +24,10 @@
             "type": "Microsoft.Compute/virtualMachineScaleSets",
             "apiVersion": "2017-03-30",
             "dependsOn": [
-                "[concat('Microsoft.Storage/storageAccounts/', parameters('moodleCommon').vmssdStorageAccounttName)]"
+                "[concat('Microsoft.Storage/storageAccounts/', parameters('maharaCommon').vmssdStorageAccounttName)]"
             ],
             "location": "[resourceGroup().location]",
-            "name": "[parameters('moodleCommon').vmssName]",
+            "name": "[parameters('maharaCommon').vmssName]",
             "properties": {
                 "overprovision": true,
                 "upgradePolicy": {
@@ -37,18 +37,18 @@
                     "extensionProfile": {
                         "extensions": [
                             {
-                                "name": "setup_moodle",
+                                "name": "setup_mahara",
                                 "properties": {
                                     "autoUpgradeMinorVersion": true,
                                     "publisher": "Microsoft.Azure.Extensions",
                                     "settings": {
                                         "fileUris": [
                                             "[variables('scriptUri')]",
-                                            "[parameters('moodleCommon').commonFunctionsScriptUri]"
+                                            "[parameters('maharaCommon').commonFunctionsScriptUri]"
                                         ]
                                     },
                                     "protectedSettings":{
-                                        "commandToExecute": "[concat('bash ',parameters('moodleCommon').webServerSetupScriptFilename,' ',parameters('moodleCommon').gfsNameRoot,'0', ' ','data', ' ', parameters('moodleCommon').siteURL, ' ', concat('jumpbox-vm-',parameters('moodleCommon').resourcesPrefix), ' ', parameters('moodleCommon').webServerType, ' ', parameters('moodleCommon').fileServerType, ' ', parameters('moodleCommon').storageAccountName, ' ', listKeys(variables('storageAccountId'), '2017-06-01').keys[0].value, ' ', parameters('moodleCommon').jboxVmName)]"
+                                        "commandToExecute": "[concat('bash ',parameters('maharaCommon').webServerSetupScriptFilename,' ',parameters('maharaCommon').gfsNameRoot,'0', ' ','data', ' ', parameters('maharaCommon').siteURL, ' ', concat('jumpbox-vm-',parameters('maharaCommon').resourcesPrefix), ' ', parameters('maharaCommon').webServerType, ' ', parameters('maharaCommon').fileServerType, ' ', parameters('maharaCommon').storageAccountName, ' ', listKeys(variables('storageAccountId'), '2017-06-01').keys[0].value, ' ', parameters('maharaCommon').jboxVmName)]"
                                     },
                                     "type": "CustomScript",
                                     "typeHandlerVersion": "2.0"
@@ -82,22 +82,22 @@
                         ]
                     },
                     "osProfile": {
-                        "adminUsername": "[parameters('moodleCommon').sshUsername]",
-                        "computerNamePrefix": "[parameters('moodleCommon').vmssName]",
+                        "adminUsername": "[parameters('maharaCommon').sshUsername]",
+                        "computerNamePrefix": "[parameters('maharaCommon').vmssName]",
                         "linuxConfiguration": {
                             "disablePasswordAuthentication": true,
                             "ssh": {
                                 "publicKeys": [
                                     {
-                                        "path": "[concat('/home/', parameters('moodleCommon').sshUsername, '/.ssh/authorized_keys')]",
-                                        "keyData": "[parameters('moodleCommon').sshPublicKey]"
+                                        "path": "[concat('/home/', parameters('maharaCommon').sshUsername, '/.ssh/authorized_keys')]",
+                                        "keyData": "[parameters('maharaCommon').sshPublicKey]"
                                     }
                                 ]
                             }
                         }
                     },
                     "storageProfile": {
-                        "imageReference": "[parameters('moodleCommon').osType]",
+                        "imageReference": "[parameters('maharaCommon').osType]",
                         "osDisk": {
                             "caching": "ReadOnly",
                             "createOption": "FromImage",
@@ -110,7 +110,7 @@
             },
             "sku": {
                 "capacity": 2,
-                "name": "[parameters('moodleCommon').autoscaleVmSku]",
+                "name": "[parameters('maharaCommon').autoscaleVmSku]",
                 "tier": "Standard"
             },
             "tags": {
@@ -121,7 +121,7 @@
             "type": "Microsoft.Insights/autoscaleSettings",
             "apiVersion": "2015-04-01",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('moodleCommon').vmssName)]"
+                "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('maharaCommon').vmssName)]"
             ],
             "location": "[resourceGroup().location]",
             "name": "autoscalewad",
@@ -132,7 +132,7 @@
                     {
                         "capacity": {
                             "default": "2",
-                            "maximum": "[parameters('moodleCommon').autoscaleVmCount]",
+                            "maximum": "[parameters('maharaCommon').autoscaleVmCount]",
                             "minimum": "2"
                         },
                         "name": "Profile1",
@@ -183,17 +183,17 @@
         }
     ],
     "variables": {
-        "dstorID": "[resourceId('Microsoft.Storage/storageAccounts',parameters('moodleCommon').vmssdStorageAccounttName)]",
-        "extBeID": "[concat(variables('extLbID'),'/backendAddressPools/',parameters('moodleCommon').extBeName)]",
-        "extFeID": "[concat(variables('extLbID'),'/frontendIPConfigurations/',parameters('moodleCommon').extFeName)]",
-        "extLbID": "[resourceId('Microsoft.Network/loadBalancers',parameters('moodleCommon').lbName)]",
-        "extProbeID": "[concat(variables('extLbID'),'/probes/',parameters('moodleCommon').extProbe  )]",
-        "pipID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('moodleCommon').lbPipName)]",
-        "scriptUri": "[concat(parameters('moodleCommon').scriptLocation,parameters('moodleCommon').webServerSetupScriptFilename,parameters('moodleCommon').artifactsSasToken)]",
-        "subnetWebRef": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('moodleCommon').vnetName),'/subnets/',parameters('moodleCommon').subnetWeb)]",
-        "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('moodleCommon').storageAccountName)]",
-        "vmssID": "[resourceId('Microsoft.Compute/virtualMachineScaleSets',parameters('moodleCommon').vmssName)]",
-        "webvmss1NIC": "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('moodleCommon').vmssName, '/virtualMachines/0/networkInterfaces/vmssnic')]"
+        "dstorID": "[resourceId('Microsoft.Storage/storageAccounts',parameters('maharaCommon').vmssdStorageAccounttName)]",
+        "extBeID": "[concat(variables('extLbID'),'/backendAddressPools/',parameters('maharaCommon').extBeName)]",
+        "extFeID": "[concat(variables('extLbID'),'/frontendIPConfigurations/',parameters('maharaCommon').extFeName)]",
+        "extLbID": "[resourceId('Microsoft.Network/loadBalancers',parameters('maharaCommon').lbName)]",
+        "extProbeID": "[concat(variables('extLbID'),'/probes/',parameters('maharaCommon').extProbe  )]",
+        "pipID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('maharaCommon').lbPipName)]",
+        "scriptUri": "[concat(parameters('maharaCommon').scriptLocation,parameters('maharaCommon').webServerSetupScriptFilename,parameters('maharaCommon').artifactsSasToken)]",
+        "subnetWebRef": "[concat(resourceId('Microsoft.Network/virtualNetworks',parameters('maharaCommon').vnetName),'/subnets/',parameters('maharaCommon').subnetWeb)]",
+        "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('maharaCommon').storageAccountName)]",
+        "vmssID": "[resourceId('Microsoft.Compute/virtualMachineScaleSets',parameters('maharaCommon').vmssName)]",
+        "webvmss1NIC": "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('maharaCommon').vmssName, '/virtualMachines/0/networkInterfaces/vmssnic')]"
     },
     "outputs": {
         "webvm1IP": {

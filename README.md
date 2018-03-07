@@ -1,14 +1,14 @@
-# Deploy and Manage a Scalable Moodle Cluster on Azure
+# Deploy and Manage a Scalable Mahara Cluster on Azure
 
 This repo contains guides on how to deploy and manage a scalable
-[Moodle](https://moodle.com) cluster on Azure. You can use an [Azure
+[Mahara](https://mahara.com) cluster on Azure. You can use an [Azure
 free account](https://azure.microsoft.com/en-us/free/) to get started.
 
-Once you have an Azure account you can deploy Moodle via the Azure
-portal using the button below, or you can [deploy Moodle via the
+Once you have an Azure account you can deploy Mahara via the Azure
+portal using the button below, or you can [deploy Mahara via the
 CLI](docs/Deploy.md).
 
-[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FMoodle%2Fmaster%2Fazuredeploy.json)  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FMoodle%2Fmaster%2Fazuredeploy.json)
+[![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FMahara%2Fmaster%2Fazuredeploy.json)  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.png)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FMahara%2Fmaster%2Fazuredeploy.json)
 
 ## What this stack will give you
 
@@ -18,24 +18,24 @@ This template set deploys the following infrastructure:
 - Controller instance running cron and handling syslog for the autoscaled site
 - Load balancer to balance across the autoscaled instances
 - MS SQL, Postgres or MySQL database
-- Azure Redis instance for Moodle caching
-- ObjectFS in Azure blobs (Moodle sitedata)
-- Three Elasticsearch VMs for search indexing in Moodle
-- Dual gluster nodes for high availability access to Moodle files
+- Azure Redis instance for Mahara caching
+- ObjectFS in Azure blobs (Mahara sitedata)
+- Three Elasticsearch VMs for search indexing in Mahara
+- Dual gluster nodes for high availability access to Mahara files
 
 ![network_diagram](images/stack_diagram.png "Diagram of deployed stack")
 
 ## Quickstart
 
-Why not get started with [deploying a Moodle cluster on
+Why not get started with [deploying a Mahara cluster on
 Azure](docs/Deploy.md) right now.
 
 ## Contributing
 
 This project welcomes contributions and suggestions. Our goal is to
 work on Azure specific tooling for deploying and managing the open
-source [Moodle](http://moodle.org) learning management system on
-Azure. We do not work on Moodle itself here, instead we work upstream
+source [Mahara](http://mahara.org) learning management system on
+Azure. We do not work on Mahara itself here, instead we work upstream
 as appropriate.
 
 The short version of how to contribute to this project is "just do
@@ -93,7 +93,7 @@ implication, estoppel or otherwise.
 
 ## Next Steps
 
-  1. [Deploy a Moodle Cluster](docs/Deploy.md)
-  1. [Obtain Deployment Details about a Moodle Cluster](docs/Get-Install-Data.md)
-  1. [Delete a Moodle Cluster](docs/Delete.md)
+  1. [Deploy a Mahara Cluster](docs/Deploy.md)
+  1. [Obtain Deployment Details about a Mahara Cluster](docs/Get-Install-Data.md)
+  1. [Delete a Mahara Cluster](docs/Delete.md)
 

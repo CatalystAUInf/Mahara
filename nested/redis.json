@@ -2,9 +2,9 @@
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "moodleCommon": {
+        "maharaCommon": {
             "metadata": {
-                "description": "Common Moodle values"
+                "description": "Common Mahara values"
             },
             "type": "object"
         }
@@ -14,7 +14,7 @@
             "type": "Microsoft.Cache/Redis",
             "apiVersion": "2016-04-01",
             "location": "[resourceGroup().location]",
-            "name": "[parameters('moodleCommon').redisCacheName]",
+            "name": "[parameters('maharaCommon').redisCacheName]",
             "properties": {
                 "enableNonSslPort": true,
                 "sku": {
@@ -22,7 +22,7 @@
                     "family": "P",
                     "name": "Premium"
                 },
-                "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('moodleCommon').vnetName, parameters('moodleCommon').subnetRedis)]"
+                "subnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('maharaCommon').vnetName, parameters('maharaCommon').subnetRedis)]"
             }
         }
     ],

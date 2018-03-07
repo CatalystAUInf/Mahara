@@ -2,9 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "moodleCommon": {
+        "maharaCommon": {
             "metadata": {
-                "description": "Common Moodle values"
+                "description": "Common Mahara values"
             },
             "type": "object"
         }
@@ -14,10 +14,10 @@
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2017-06-01",
             "location": "[resourceGroup().location]",
-            "name": "[parameters('moodleCommon').storageAccountName]",
+            "name": "[parameters('maharaCommon').storageAccountName]",
             "kind": "Storage",
             "sku": {
-                "name": "[parameters('moodleCommon').storageAccountType]"
+                "name": "[parameters('maharaCommon').storageAccountType]"
             },
             "properties": {
                 "encryption": {
