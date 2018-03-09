@@ -26,7 +26,7 @@
     glusterNode=${2}
     glusterVolume=${3}
     siteFQDN=${4}
-    mysqlIP=${5}
+    dbIP=${5}
     maharadbname=${6}
     maharadbuser=${7}
     maharadbpass=${8}
