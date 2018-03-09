@@ -168,7 +168,7 @@ EOF
   cat <<EOF >> /etc/nginx/sites-enabled/${siteFQDN}.conf
 server {
         listen 443 ssl;
-        root /mahara/html/mahara;
+        root /mahara/html/mahara/htdocs;
 	index index.php index.html index.htm;
 
         ssl on;
@@ -270,9 +270,9 @@ EOF
 	ServerName ${siteFQDN}
 
 	ServerAdmin webmaster@localhost
-	DocumentRoot /mahara/html/mahara
+	DocumentRoot /mahara/html/mahara/htdocs
 
-	<Directory /mahara/html/mahara>
+	<Directory /mahara/html/mahara/htdocs>
 		Options FollowSymLinks
 		AllowOverride All
 		Require all granted
