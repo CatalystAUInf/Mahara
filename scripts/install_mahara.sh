@@ -31,8 +31,8 @@
     maharadbuser=${7}
     maharadbpass=${8}
     adminpass=${9}
-    mysqladminlogin=${10}
-    mysqladminpass=${11}
+    dbadminlogin=${10}
+    dbadminpass=${11}
     wabsacctname=${12}
     wabsacctkey=${13}
     azuremaharadbuser=${14}
@@ -54,8 +54,8 @@
     echo $maharadbuser         >> /tmp/vars.txt
     echo $maharadbpass         >> /tmp/vars.txt
     echo    $adminpass         >> /tmp/vars.txt
-    echo $mysqladminlogin      >> /tmp/vars.txt
-    echo $mysqladminpass       >> /tmp/vars.txt
+    echo $dbadminlogin         >> /tmp/vars.txt
+    echo $dbadminpass          >> /tmp/vars.txt
     echo $wabsacctname         >> /tmp/vars.txt
     echo $wabsacctkey          >> /tmp/vars.txt
     echo $azuremaharadbuser    >> /tmp/vars.txt
