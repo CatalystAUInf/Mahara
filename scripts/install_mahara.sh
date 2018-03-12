@@ -1128,10 +1128,10 @@ EOF
 
      if [ $dbServerType = "mysql" ]; then
         mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "CREATE DATABASE ${maharadbname} CHARACTER SET utf8;"
-        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "GRANT ALL ON ${maharadbname}.* TO ${maharadbuser} IDENTIFIED BY '${maharadbpass}';"
+        mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e "GRANT ALL ON ${maharadbname}.* TO ${azuremaharadbuser} IDENTIFIED BY '${maharadbpass}';"
         
         echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"CREATE DATABASE ${maharadbname} CHARACTER SET utf8;\"" > /tmp/debug.log
-        echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"GRANT ALL ON ${maharadbname}.* TO ${maharadbuser} IDENTIFIED BY '${maharadbpass}';\"" >> /tmp/debug.log
+        echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"GRANT ALL ON ${maharadbname}.* TO ${azuremaharadbuser} IDENTIFIED BY '${maharadbpass}';\"" >> /tmp/debug.log
      elif [ $dbServerType = "mssql" ]; then
          /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE DATABASE ${maharadbname} ( MAXSIZE = $serviceSize, EDITION = '$serv
 iceTier', SERVICE_OBJECTIVE = '$serviceObjective' )"
