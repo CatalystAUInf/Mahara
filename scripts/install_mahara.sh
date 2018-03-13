@@ -1158,7 +1158,7 @@ URLSECRET=`${PWGEN} 8 1`
     cat <<EOF >> /mahara/html/mahara/htdocs/config.php
 <?php
 \$cfg = new stdClass();
-\$cfg->dbtype   = 'mysql';
+\$cfg->dbtype   = '$dbServerType';
 \$cfg->dbhost   = '$mysqlIP';
 \$cfg->dbport   = null;
 \$cfg->dbname   = '$maharadbname';
