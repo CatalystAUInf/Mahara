@@ -77,7 +77,6 @@ check_fileServerType_param $fileServerType
 
   # Mahara requirements
   sudo apt-get install -y graphviz aspell php-soap php-json php-redis php-bcmath php-gd php-pgsql php-mysql php-xmlrpc php-intl php-xml php-bz2
-  install_php_sql_driver
 
   if [ $fileServerType = "gluster" ]; then
     # Mount gluster fs for /mahara

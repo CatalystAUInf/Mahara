@@ -75,10 +75,6 @@
       mysqlIP=$dbIP
       mysqladminlogin=$dbadminlogin
       mysqladminpass=$dbadminpass
-    elif [ "$dbServerType" = "mssql" ]; then
-      mssqlIP=$dbIP
-      mssqladminlogin=$dbadminlogin
-      mssqladminpass=$dbadminpass
 
     elif [ "$dbServerType" = "postgres" ]; then
       postgresIP=$dbIP
@@ -661,8 +657,6 @@ EOF
     sudo apt-get install -y --force-yes npm nodejs-legacy
     if [ $dbServerType = "mysql" ]; then
         sudo apt-get install -y --force-yes php-mysql
-    elif [ $dbServerType = "mssql" ]; then
-        install_php_sql_driver
     else
         sudo apt-get install -y --force-yes php-pgsql
     fi
@@ -1132,12 +1126,6 @@ EOF
         
         echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"CREATE DATABASE ${maharadbname} CHARACTER SET utf8;\"" > /tmp/debug.log
         echo "mysql -h $mysqlIP -u $mysqladminlogin -p${mysqladminpass} -e \"GRANT ALL ON ${maharadbname}.* TO ${maharadbuser} IDENTIFIED BY '${maharadbpass}';\"" >> /tmp/debug.log
-     elif [ $dbServerType = "mssql" ]; then
-         /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE DATABASE ${maharadbname} ( MAXSIZE = $serviceSize, EDITION = '$serv
-iceTier', SERVICE_OBJECTIVE = '$serviceObjective' )"
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -Q "CREATE LOGIN ${maharadbuser} with password = '${maharabpass}'"
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${maharadbname} -Q "CREATE USER ${maharabuser} FROM LOGIN ${maharadbuser}"
-        /opt/mssql-tools/bin/sqlcmd -S $mssqlIP -U $mssqladminlogin -P ${mssqladminpass} -d ${maharadbname} -Q "exec sp_addrolemember 'db_owner','${maharabuser}'"
      else
         echo "${postgresIP}:5432:postgres:${pgadminlogin}:${pgadminpass}" > /root/.pgpass
         chmod 600 /root/.pgpass
