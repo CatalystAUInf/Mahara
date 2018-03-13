@@ -49,7 +49,7 @@
     echo $glusterNode          >> /tmp/vars.txt
     echo $glusterVolume        >> /tmp/vars.txt
     echo $siteFQDN             >> /tmp/vars.txt
-    echo $mysqlIP              >> /tmp/vars.txt
+    echo $dbIP              >> /tmp/vars.txt
     echo $maharadbname         >> /tmp/vars.txt
     echo $maharadbuser         >> /tmp/vars.txt
     echo $maharadbpass         >> /tmp/vars.txt
@@ -1159,7 +1159,7 @@ URLSECRET=`${PWGEN} 8 1`
 <?php
 \$cfg = new stdClass();
 \$cfg->dbtype   = '$dbServerType';
-\$cfg->dbhost   = '$mysqlIP';
+\$cfg->dbhost   = '$dbIP';
 \$cfg->dbport   = null;
 \$cfg->dbname   = '$maharadbname';
 \$cfg->dbuser   = '$azuremaharadbuser';
@@ -1185,7 +1185,7 @@ cd /tmp; sudo -u www-data /usr/bin/php /mahara/html/mahara/htdocs/admin/cli/inst
 
    # Set up cronned sql dump
    cat <<EOF > /etc/cron.d/sql-backup
-   22 02 * * * root /usr/bin/mysqldump -h $mysqlIP -u ${azuremaharadbuser} -p'${maharadbpass}' --databases ${maharadbname} | gzip > /mahara/db-backup.sql.gz
+   22 02 * * * root /usr/bin/mysqldump -h $dbIP -u ${azuremaharadbuser} -p'${maharadbpass}' --databases ${maharadbname} | gzip > /mahara/db-backup.sql.gz
 EOF
 
    # Turning off services we don't need the jumpbox running
